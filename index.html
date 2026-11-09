@@ -107,6 +107,17 @@ h2 {
   display: inline-block; margin-top: 4px; font-size: 0.68rem; font-weight: 650;
   padding: 1px 7px; border-radius: 999px; background: var(--wip-soft); color: var(--wip);
 }
+.badge[hidden] { display: none; }
+.badge.na { background: var(--line); color: var(--muted); }
+.card.na { border-style: dashed; opacity: .55; }
+.card.na.on, .card.na.product.on { box-shadow: none; border-color: var(--line); }
+.envrow { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; }
+.envrow label { font-size: 0.8rem; font-weight: 650; color: var(--muted); }
+.envrow select {
+  font: 600 0.85rem/1 inherit; font-family: inherit; min-height: 32px; padding: 6px 10px;
+  border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--text);
+}
+.envrow select:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 .legend {
   display: flex; align-items: flex-start; gap: 10px;
   margin-top: 10px; padding: 7px 10px; border-radius: 10px;
@@ -121,6 +132,7 @@ h2 {
   <h1>Product dependencies</h1>
   <p class="lede">Pick a product to see what it uses.</p>
 
+  <div class="envrow"><label for="env">Environment</label><select id="env"></select></div>
   <p class="label" id="pick-label">Viewing from</p>
   <div class="chips" id="chips" role="group" aria-labelledby="pick-label"></div>
 
@@ -139,10 +151,10 @@ h2 {
 </main>
 
 <script>
-// [name, kind, isProduct, usedBy, optional badge]
+// [name, kind, isProduct, usedBy]
 var D = [
-  ["Calc", "Product", 1, ["BinGrid", "Wells"], "New front end in development"],
-  ["GeoRepository", "Product", 1, [], "New front end in development"],
+  ["Calc", "Product", 1, ["BinGrid", "Wells"]],
+  ["GeoRepository", "Product", 1, []],
   ["BinGrid", "Product", 1, []],
   ["Wells", "Product", 1, []],
   ["GeoFileManager", "Shared API", 0, ["BinGrid", "Wells", "Calc", "GeoFlow"]],
@@ -181,7 +193,7 @@ var cards = D.map(function (d) {
     '<div class="card-head"><span class="card-name">' + esc(d[0]) + "</span>" +
     (d[0] !== "BHOO" ? '<span class="key" title="Signs in through User Portal">' + KEY + "</span>" : "") + "</div>" +
     '<p class="kind">' + d[1] + "</p>" +
-    (d[4] ? '<span class="badge">' + esc(d[4]) + "</span>" : "") +
+    '<span class="badge" hidden></span>' +
     '<div class="tags">' + d[3].map(function (u) {
       return '<span class="tag">' + esc(LB[u]) + "</span>";
     }).join("") + "</div>";
@@ -189,21 +201,59 @@ var cards = D.map(function (d) {
   return c;
 });
 
+var WIP = "New front end in development";
+// group, folder name, items NOT in this environment, badges {item: text}
+var ENVS = [
+  ["Internal", "dev-operator", [], { Calc: WIP, GeoRepository: WIP }],
+  ["Internal", "stg-operator", [], {}],
+  ["Shell", "shell_gs", [], {}],
+  ["Shell", "shell_prod", [], {}],
+  ["Shell", "shell_staging", [], {}],
+  ["Shell", "shell_staging_uat", [], {}],
+  ["IOGP", "iogp", [], {}],
+  ["IOGP", "dev_iogp", [], {}],
+  ["Operators", "bp", [], {}],
+  ["Operators", "cop", [], {}],
+  ["Operators", "epsg", [], {}],
+  ["Operators", "equinor", [], {}],
+  ["Operators", "exxon", [], {}],
+  ["Operators", "geomatic-solutions", [], {}],
+  ["Operators", "petronas", [], {}],
+  ["Operators", "totalenergies", [], {}],
+  ["Sync", "syncsource", [], {}],
+  ["Sync", "synctarget", [], {}]
+];
+var envSel = document.getElementById("env"), groups = {};
+ENVS.forEach(function (e) {
+  if (!groups[e[0]]) { groups[e[0]] = el("optgroup"); groups[e[0]].label = e[0]; envSel.appendChild(groups[e[0]]); }
+  var o = el("option", null, esc(e[1])); o.value = e[1]; groups[e[0]].appendChild(o);
+});
+var curKey = "BinGrid";
+function env() { return ENVS.filter(function (e) { return e[1] === envSel.value; })[0]; }
 function show(k) {
+  curKey = k;
+  var ev = env();
   chips.querySelectorAll(".chip").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.k === k)); });
   var n = 0;
   cards.forEach(function (c, i) {
-    var on = D[i][3].indexOf(k) > -1;
+    var name = D[i][0], na = ev[2].indexOf(name) > -1, wip = ev[3][name];
+    var on = D[i][3].indexOf(k) > -1 && !na;
     if (on) n++;
     c.classList.toggle("on", on);
-    c.classList.toggle("dim", !on);
+    c.classList.toggle("dim", !on && !na);
+    c.classList.toggle("na", na);
+    var b = c.querySelector(".badge");
+    b.hidden = !(na || wip);
+    b.classList.toggle("na", na);
+    b.textContent = na ? "Not in this environment" : wip || "";
   });
   var p = P.filter(function (x) { return x[0] === k; })[0];
-  var line = LB[k] + " uses " + n + ".";
+  var line = LB[k] + " uses " + n + " in " + ev[1] + ".";
   var auth = k === "UP" ? "It is the login desk itself." : p[2] ? "Signs in through User Portal." : "Does not sign in through User Portal.";
   document.getElementById("summary").innerHTML = esc(line) + '<span class="auth">' + auth + "</span>";
 }
 chips.addEventListener("click", function (e) { var b = e.target.closest(".chip"); if (b) show(b.dataset.k); });
+envSel.addEventListener("change", function () { show(curKey); });
 show("BinGrid");
 </script>
 </body>
