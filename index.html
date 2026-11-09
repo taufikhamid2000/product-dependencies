@@ -126,7 +126,7 @@ h2 {
 
   <div class="legend">
     <span class="key" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M10.8 12.2 20 3m-4 4 3 3m-5-1 2 2"/></svg></span>
-    <span>Key = signs in through User Portal. Everything has it except GS Official Website and Training Center.</span>
+    <span>Key = signs in through User Portal. Everything has it except GS Official Website.</span>
   </div>
 </main>
 
@@ -134,9 +134,9 @@ h2 {
 // [name, kind, isProduct, usedBy]
 var D = [
   ["Calc", "Product", 1, ["BinGrid", "Wells"]],
-  ["GeoRepository", "Product", 1, ["TC"]],
-  ["BinGrid", "Product", 1, ["TC"]],
-  ["Wells", "Product", 1, ["TC"]],
+  ["GeoRepository", "Product", 1, []],
+  ["BinGrid", "Product", 1, []],
+  ["Wells", "Product", 1, []],
   ["GeoFileManager", "Shared API", 0, ["BinGrid", "Wells", "Calc", "GeoFlow"]],
   ["VectorData", "Shared API", 0, ["BinGrid", "Wells"]],
   ["ProjectLink", "Shared API", 0, ["BinGrid", "Wells"]],
@@ -150,7 +150,7 @@ var D = [
 // [id, label, signs in through User Portal]
 var P = [
   ["BinGrid", "BinGrid", 1], ["Wells", "Wells", 1], ["GeoRepo", "GeoRepository", 1],
-  ["Calc", "Calc", 1], ["GeoFlow", "GeoFlow", 1], ["TC", "Training Center", 0],
+  ["Calc", "Calc", 1], ["GeoFlow", "GeoFlow", 1],
   ["GS", "GS Official", 0], ["UP", "User Portal", 1]
 ];
 var LB = {}; P.forEach(function (p) { LB[p[0]] = p[1]; });
@@ -173,7 +173,7 @@ var cards = D.map(function (d) {
     (d[2] ? '<span class="key" title="Signs in through User Portal">' + KEY + "</span>" : "") + "</div>" +
     '<p class="kind">' + d[1] + "</p>" +
     '<div class="tags">' + d[3].map(function (u) {
-      return '<span class="tag">' + (u === "TC" ? "Taught in Training Center" : esc(LB[u])) + "</span>";
+      return '<span class="tag">' + esc(LB[u]) + "</span>";
     }).join("") + "</div>";
   document.getElementById(d[2] ? "products" : "apis").appendChild(c);
   return c;
@@ -189,7 +189,7 @@ function show(k) {
     c.classList.toggle("dim", !on);
   });
   var p = P.filter(function (x) { return x[0] === k; })[0];
-  var line = k === "TC" ? "Teaches users how to use " + n + " products." : LB[k] + " uses " + n + ".";
+  var line = LB[k] + " uses " + n + ".";
   var auth = k === "UP" ? "It is the login desk itself." : p[2] ? "Signs in through User Portal." : "Does not sign in through User Portal.";
   document.getElementById("summary").innerHTML = esc(line) + '<span class="auth">' + auth + "</span>";
 }
