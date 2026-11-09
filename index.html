@@ -126,7 +126,7 @@ h2 {
 
   <div class="legend">
     <span class="key" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M10.8 12.2 20 3m-4 4 3 3m-5-1 2 2"/></svg></span>
-    <span>Key = signs in through User Portal. Everything has it except GS Official Website.</span>
+    <span>Key = signs in through User Portal. Everything has it except GS Official Website and BHOO.</span>
   </div>
 </main>
 
@@ -171,7 +171,7 @@ var cards = D.map(function (d) {
   var c = el("div", "card" + (d[2] ? " product" : ""));
   c.innerHTML =
     '<div class="card-head"><span class="card-name">' + esc(d[0]) + "</span>" +
-    (d[2] ? '<span class="key" title="Signs in through User Portal">' + KEY + "</span>" : "") + "</div>" +
+    (d[0] !== "BHOO" ? '<span class="key" title="Signs in through User Portal">' + KEY + "</span>" : "") + "</div>" +
     '<p class="kind">' + d[1] + "</p>" +
     '<div class="tags">' + d[3].map(function (u) {
       return '<span class="tag">' + esc(LB[u]) + "</span>";
