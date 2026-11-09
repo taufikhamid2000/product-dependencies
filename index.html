@@ -118,6 +118,19 @@ h2 {
   border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--text);
 }
 .envrow select:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.editbtn { font: 600 0.8rem/1 inherit; font-family: inherit; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); cursor: pointer; }
+.editbtn:hover { color: var(--text); border-color: var(--accent); }
+.login { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 8px; }
+.login input, .edit .bd { font: 0.85rem/1 inherit; font-family: inherit; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--text); min-width: 0; }
+.login input { flex: 1 1 200px; }
+.edit { margin-top: 6px; display: grid; gap: 6px; }
+.edit label { font-size: 0.78rem; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.edit .bd { width: 100%; font-size: 0.78rem; padding: 5px 8px; }
+.edit[hidden], .login[hidden] { display: none; }
+.status { margin: 0 0 6px; font-size: 0.8rem; color: var(--muted); }
+.status:empty { display: none; }
+.status.bad { color: var(--key); }
 .legend {
   display: flex; align-items: flex-start; gap: 10px;
   margin-top: 10px; padding: 7px 10px; border-radius: 10px;
@@ -126,12 +139,15 @@ h2 {
 .legend .key { background: transparent; flex: none; width: 16px; height: 16px; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 </head>
 <body>
 <main>
-  <h1>Product dependencies</h1>
+  <div class="top"><h1>Product dependencies</h1><button type="button" class="editbtn" id="editBtn" hidden>Edit</button></div>
   <p class="lede">Pick a product to see what it uses.</p>
 
+  <form class="login" id="login" hidden><input type="email" id="email" required autocomplete="email" placeholder="Your email" aria-label="Email"><button type="submit" class="chip">Send sign-in link</button></form>
+  <p class="status" id="status" aria-live="polite"></p>
   <div class="envrow"><label for="env">Environment</label><select id="env"></select></div>
   <p class="label" id="pick-label">Viewing from</p>
   <div class="chips" id="chips" role="group" aria-labelledby="pick-label"></div>
@@ -188,12 +204,13 @@ P.forEach(function (p) {
 });
 
 var cards = D.map(function (d) {
-  var c = el("div", "card" + (d[2] ? " product" : ""));
+  var c = el("div", "card" + (d[2] ? " product" : "")); c.dataset.name = d[0];
   c.innerHTML =
     '<div class="card-head"><span class="card-name">' + esc(d[0]) + "</span>" +
     (d[0] !== "BHOO" ? '<span class="key" title="Signs in through User Portal">' + KEY + "</span>" : "") + "</div>" +
     '<p class="kind">' + d[1] + "</p>" +
     '<span class="badge" hidden></span>' +
+    '<div class="edit" hidden><label><input type="checkbox" class="ck"> In this environment</label><input class="bd" type="text" maxlength="60" placeholder="Badge text (optional)" aria-label="Badge text"></div>' +
     '<div class="tags">' + d[3].map(function (u) {
       return '<span class="tag">' + esc(LB[u]) + "</span>";
     }).join("") + "</div>";
@@ -201,60 +218,114 @@ var cards = D.map(function (d) {
   return c;
 });
 
-var WIP = "New front end in development";
-// group, folder name, items NOT in this environment, badges {item: text}
-var ENVS = [
-  ["Internal", "dev-operator", [], { Calc: WIP, GeoRepository: WIP }],
-  ["Internal", "stg-operator", [], {}],
-  ["Shell", "shell_gs", [], {}],
-  ["Shell", "shell_prod", [], {}],
-  ["Shell", "shell_staging", [], {}],
-  ["Shell", "shell_staging_uat", [], {}],
-  ["IOGP", "iogp", ["BinGrid", "Wells"], {}],
-  ["IOGP", "dev_iogp", ["BinGrid", "Wells"], {}],
-  ["Operators", "bp", [], {}],
-  ["Operators", "cop", [], {}],
-  ["Operators", "epsg", ["BinGrid", "Wells"], {}],
-  ["Operators", "equinor", [], {}],
-  ["Operators", "exxon", [], {}],
-  ["Operators", "geomatic-solutions", ["BinGrid", "Wells"], {}],
-  ["Operators", "petronas", [], {}],
-  ["Operators", "totalenergies", [], {}],
-  ["Sync", "syncsource", [], {}],
-  ["Sync", "synctarget", [], {}]
-];
-var envSel = document.getElementById("env"), groups = {};
-ENVS.forEach(function (e) {
-  if (!groups[e[0]]) { groups[e[0]] = el("optgroup"); groups[e[0]].label = e[0]; envSel.appendChild(groups[e[0]]); }
-  var o = el("option", null, esc(e[1])); o.value = e[1]; groups[e[0]].appendChild(o);
+var SB_URL = "https://hmkjszolqnpcsoatrgcu.supabase.co";
+var SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhta2pzem9scW5wY3NvYXRyZ2N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mjc1MDU4MTgsImV4cCI6MjA0MzA4MTgxOH0.4qDEAKenGN78ro-es_aWrhMp3S_L1Ycm3Tn1Qo97-bI";
+var OWNER = "taufikhamid2000@gmail.com";
+var sb = window.supabase ? window.supabase.createClient(SB_URL, SB_KEY) : null;
+
+var envList = [], avail = {}, editing = false, signedIn = false, curKey = "BinGrid";
+var envSel = document.getElementById("env"), statusEl = document.getElementById("status");
+
+function get(path) {
+  return fetch(SB_URL + "/rest/v1/" + path, { headers: { apikey: SB_KEY, Authorization: "Bearer " + SB_KEY } })
+    .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); });
+}
+function say(msg, bad) { statusEl.textContent = msg || ""; statusEl.className = "status" + (bad ? " bad" : ""); }
+function cell(envId, name) { return (avail[envId] && avail[envId][name]) || { available: true, badge: null }; }
+function env() { return envList.filter(function (e) { return e.id === envSel.value; })[0]; }
+
+function load() {
+  return Promise.all([get("pd_environments?select=id,grp,sort&order=sort"), get("pd_availability?select=env,item,available,badge")])
+    .then(function (res) {
+      envList = res[0]; avail = {};
+      res[1].forEach(function (a) { (avail[a.env] = avail[a.env] || {})[a.item] = { available: a.available, badge: a.badge }; });
+      var keep = envSel.value; envSel.innerHTML = ""; var groups = {};
+      envList.forEach(function (e) {
+        if (!groups[e.grp]) { groups[e.grp] = el("optgroup"); groups[e.grp].label = e.grp; envSel.appendChild(groups[e.grp]); }
+        var o = el("option", null, esc(e.id)); o.value = e.id; groups[e.grp].appendChild(o);
+      });
+      if (keep && avail[keep]) envSel.value = keep;
+      say("");
+      show(curKey);
+    })
+    .catch(function () { say("Could not load data. Try refreshing.", true); });
+}
+
+function save(envId, name, patch) {
+  var row = Object.assign({ env: envId, item: name }, cell(envId, name), patch);
+  (avail[envId] = avail[envId] || {})[name] = { available: row.available, badge: row.badge };
+  show(curKey);
+  say("Saving...");
+  sb.from("pd_availability").upsert(row).then(function (r) {
+    if (r.error) { say("Save failed: " + r.error.message, true); load(); } else say("Saved.");
+  });
+}
+document.querySelector("main").addEventListener("change", function (e) {
+  var c = e.target.closest(".card"); if (!c || !editing) return;
+  var name = c.dataset.name, envId = envSel.value;
+  if (e.target.classList.contains("ck")) save(envId, name, { available: e.target.checked });
+  if (e.target.classList.contains("bd")) save(envId, name, { badge: e.target.value.trim() || null });
 });
-var curKey = "BinGrid";
-function env() { return ENVS.filter(function (e) { return e[1] === envSel.value; })[0]; }
+
 function show(k) {
   curKey = k;
-  var ev = env();
+  var ev = env(); if (!ev) return;
   chips.querySelectorAll(".chip").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.k === k)); });
   var n = 0;
   cards.forEach(function (c, i) {
-    var name = D[i][0], na = ev[2].indexOf(name) > -1, wip = ev[3][name];
+    var name = D[i][0], a = cell(ev.id, name), na = !a.available, wip = a.badge;
     var on = D[i][3].indexOf(k) > -1 && !na;
     if (on) n++;
     c.classList.toggle("on", on);
     c.classList.toggle("dim", !on && !na);
     c.classList.toggle("na", na);
     var b = c.querySelector(".badge");
-    b.hidden = !(na || wip);
+    b.hidden = editing || !(na || wip);
     b.classList.toggle("na", na);
     b.textContent = na ? "Not in this environment" : wip || "";
+    var ed = c.querySelector(".edit");
+    ed.hidden = !editing;
+    ed.querySelector(".ck").checked = a.available;
+    var bd = ed.querySelector(".bd");
+    if (document.activeElement !== bd) bd.value = a.badge || "";
   });
   var p = P.filter(function (x) { return x[0] === k; })[0];
-  var line = LB[k] + " uses " + n + " in " + ev[1] + ".";
+  var line = LB[k] + " uses " + n + " in " + ev.id + ".";
   var auth = k === "UP" ? "It is the login desk itself." : p[2] ? "Signs in through User Portal." : "Does not sign in through User Portal.";
   document.getElementById("summary").innerHTML = esc(line) + '<span class="auth">' + auth + "</span>";
 }
 chips.addEventListener("click", function (e) { var b = e.target.closest(".chip"); if (b) show(b.dataset.k); });
 envSel.addEventListener("change", function () { show(curKey); });
-show("BinGrid");
+
+// --- owner sign-in and edit mode ---
+var editBtn = document.getElementById("editBtn"), loginBox = document.getElementById("login");
+function refreshEditUi() {
+  editBtn.textContent = editing ? "Done editing" : "Edit";
+  editBtn.hidden = !sb;
+  document.body.classList.toggle("editing", editing);
+  show(curKey);
+}
+editBtn.addEventListener("click", function () {
+  if (editing) { editing = false; loginBox.hidden = true; return refreshEditUi(); }
+  if (signedIn) { editing = true; return refreshEditUi(); }
+  loginBox.hidden = !loginBox.hidden;
+});
+document.getElementById("loginForm").addEventListener("submit", function (e) {
+  e.preventDefault();
+  var email = document.getElementById("email").value.trim();
+  sb.auth.signInWithOtp({ email: email, options: { shouldCreateUser: false, emailRedirectTo: location.origin + location.pathname } })
+    .then(function (r) { say(r.error ? "Could not send link: " + r.error.message : "Check your email for the sign-in link.", !!r.error); });
+});
+if (sb) {
+  sb.auth.onAuthStateChange(function (_ev, session) {
+    signedIn = !!(session && session.user && session.user.email === OWNER);
+    if (signedIn && !editing) { editing = true; loginBox.hidden = true; say(""); }
+    if (!signedIn) editing = false;
+    refreshEditUi();
+  });
+}
+refreshEditUi();
+load();
 </script>
 </body>
 </html>
