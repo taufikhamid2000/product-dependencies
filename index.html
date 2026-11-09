@@ -310,7 +310,7 @@ editBtn.addEventListener("click", function () {
   if (signedIn) { editing = true; return refreshEditUi(); }
   loginBox.hidden = !loginBox.hidden;
 });
-document.getElementById("loginForm").addEventListener("submit", function (e) {
+loginBox.addEventListener("submit", function (e) {
   e.preventDefault();
   var email = document.getElementById("email").value.trim();
   sb.auth.signInWithOtp({ email: email, options: { shouldCreateUser: false, emailRedirectTo: location.origin + location.pathname } })
