@@ -20,6 +20,8 @@
   --key: #b3441f;
   --key-soft: #fbece6;
   --radius: 14px;
+  --wip: #8a5a00;
+  --wip-soft: #fdf0cf;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -35,6 +37,8 @@
     --prod-soft: #12302a;
     --key: #f2a07f;
     --key-soft: #3a211a;
+    --wip: #f5c451;
+    --wip-soft: #3a2f10;
   }
 }
 * { box-sizing: border-box; }
@@ -99,6 +103,10 @@ h2 {
 }
 .card.product .tag { background: var(--prod-soft); color: var(--prod); }
 
+.badge {
+  display: inline-block; margin-top: 4px; font-size: 0.68rem; font-weight: 650;
+  padding: 1px 7px; border-radius: 999px; background: var(--wip-soft); color: var(--wip);
+}
 .legend {
   display: flex; align-items: flex-start; gap: 10px;
   margin-top: 10px; padding: 7px 10px; border-radius: 10px;
@@ -131,10 +139,10 @@ h2 {
 </main>
 
 <script>
-// [name, kind, isProduct, usedBy]
+// [name, kind, isProduct, usedBy, optional badge]
 var D = [
-  ["Calc", "Product", 1, ["BinGrid", "Wells"]],
-  ["GeoRepository", "Product", 1, []],
+  ["Calc", "Product", 1, ["BinGrid", "Wells"], "New front end in development"],
+  ["GeoRepository", "Product", 1, [], "New front end in development"],
   ["BinGrid", "Product", 1, []],
   ["Wells", "Product", 1, []],
   ["GeoFileManager", "Shared API", 0, ["BinGrid", "Wells", "Calc", "GeoFlow"]],
@@ -173,6 +181,7 @@ var cards = D.map(function (d) {
     '<div class="card-head"><span class="card-name">' + esc(d[0]) + "</span>" +
     (d[0] !== "BHOO" ? '<span class="key" title="Signs in through User Portal">' + KEY + "</span>" : "") + "</div>" +
     '<p class="kind">' + d[1] + "</p>" +
+    (d[4] ? '<span class="badge">' + esc(d[4]) + "</span>" : "") +
     '<div class="tags">' + d[3].map(function (u) {
       return '<span class="tag">' + esc(LB[u]) + "</span>";
     }).join("") + "</div>";
