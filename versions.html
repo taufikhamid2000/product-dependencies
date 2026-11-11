@@ -81,6 +81,20 @@ li:first-child { border-top: 0; }
 .notes strong { color: var(--fg); font-weight: 600; }
 .notes p { margin: 0 0 6px; max-width: 80ch; }
 .notes p:last-child { margin: 0; }
+
+li { position: relative; padding-left: 24px; }
+ul { min-height: 44px; }
+.grip { position: absolute; left: 0; top: 9px; width: 20px; text-align: center; cursor: grab; touch-action: none; user-select: none; color: var(--muted); letter-spacing: -2px; line-height: 1.4; border-radius: 4px; }
+.grip:hover, .grip:focus-visible { color: var(--fg); background: var(--bg); outline: none; }
+.grip:focus-visible { box-shadow: 0 0 0 2px var(--muted); }
+li.dragging { opacity: 0.35; }
+.lane.over { outline: 2px dashed var(--muted); outline-offset: -2px; }
+.ghost { position: fixed; z-index: 50; pointer-events: none; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px 8px 24px; box-shadow: 0 8px 24px rgba(0,0,0,0.25); list-style: none; }
+.ghost .grip { top: 8px; left: 2px; }
+.reset { margin-left: auto; font: 600 0.8rem/1 var(--font-body); padding: 7px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); cursor: pointer; }
+.reset:hover { color: var(--fg); border-color: var(--muted); }
+.reset:focus-visible { outline: 2px solid var(--muted); outline-offset: 2px; }
+.tally { align-items: center; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
@@ -94,6 +108,7 @@ li:first-child { border-top: 0; }
     <span class="pill v11">7 on 1.1</span>
     <span class="pill v12">0 on 1.2</span>
     <span class="pill unk">5 not confirmed</span>
+    <button type="button" class="reset" id="reset">Reset lanes</button>
   </div>
 
   <div class="board">
@@ -123,6 +138,7 @@ li:first-child { border-top: 0; }
     <section class="lane v12">
       <div class="lane-head"><h2>UserPortal 1.2</h2><span class="n">0</span></div>
       <p class="lane-sub">develop branch, not released yet</p>
+      <ul></ul>
       <div class="empty">No operator yet. After the release, everyone moves here and 1.1 is retired.</div>
     </section>
 
@@ -141,8 +157,99 @@ li:first-child { border-top: 0; }
 
   <div class="notes">
     <p><strong>Where this comes from.</strong> The running version is not stored in git. The 1.1 and old-auth placements come from the team chat and the dev footer. The five unconfirmed operators come from the pipeline repos only.</p>
+    <p><strong>Moving operators.</strong> Drag the grip beside a name to another lane, or focus it and press the left or right arrow key. Your layout is saved in this browser only.</p>
     <p><strong>Check next.</strong> Open each unconfirmed operator's UserPortal footer, or ask the team, then move it to the right lane.</p>
   </div>
 </main>
+<script>
+(function () {
+  var KEY = "pd-versions-lanes";
+  var ORDER = ["old", "v11", "v12", "unk"];
+  var LABEL = { old: " on old auth", v11: " on 1.1", v12: " on 1.2", unk: " not confirmed" };
+  var lanes = {};
+  ORDER.forEach(function (k) { lanes[k] = document.querySelector(".lane." + k); });
+  var home = {};
+
+  function keyOf(section) { return ORDER.filter(function (k) { return section.classList.contains(k); })[0]; }
+  function laneOf(li) { return keyOf(li.closest(".lane")); }
+  function place(li, k) { lanes[k].querySelector("ul").appendChild(li); }
+
+  document.querySelectorAll(".lane li").forEach(function (li) {
+    var id = li.querySelector(".op").textContent.trim();
+    li.dataset.id = id;
+    home[id] = laneOf(li);
+    var g = document.createElement("span");
+    g.className = "grip"; g.textContent = "⋮⋮"; g.tabIndex = 0;
+    g.setAttribute("role", "button");
+    g.setAttribute("aria-label", "Move " + id + ". Press left or right arrow to change lane.");
+    g.title = "Drag to another lane";
+    li.insertBefore(g, li.firstChild);
+  });
+
+  function save() {
+    var st = {};
+    document.querySelectorAll(".lane li").forEach(function (li) { st[li.dataset.id] = laneOf(li); });
+    try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {}
+  }
+  function refresh(doSave) {
+    var n = {};
+    ORDER.forEach(function (k) {
+      var c = lanes[k].querySelectorAll("li").length; n[k] = c;
+      lanes[k].querySelector(".n").textContent = c;
+      var e = lanes[k].querySelector(".empty"); if (e) e.hidden = c > 0;
+      document.querySelector(".pill." + k).textContent = c + LABEL[k];
+    });
+    if (doSave) save();
+  }
+
+  var saved = null;
+  try { saved = JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) {}
+  if (saved) document.querySelectorAll(".lane li").forEach(function (li) {
+    var k = saved[li.dataset.id]; if (k && lanes[k] && k !== laneOf(li)) place(li, k);
+  });
+  refresh(false);
+
+  document.getElementById("reset").addEventListener("click", function () {
+    document.querySelectorAll(".lane li").forEach(function (li) { place(li, home[li.dataset.id]); });
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    refresh(false);
+  });
+
+  document.addEventListener("keydown", function (e) {
+    var g = e.target.closest && e.target.closest(".grip");
+    if (!g || (e.key !== "ArrowLeft" && e.key !== "ArrowRight")) return;
+    e.preventDefault();
+    var li = g.closest("li"), i = ORDER.indexOf(laneOf(li)) + (e.key === "ArrowRight" ? 1 : -1);
+    if (i < 0 || i >= ORDER.length) return;
+    place(li, ORDER[i]); refresh(true); g.focus();
+  });
+
+  document.addEventListener("pointerdown", function (e) {
+    var g = e.target.closest && e.target.closest(".grip");
+    if (!g) return;
+    e.preventDefault();
+    var li = g.closest("li"), over = null;
+    var ghost = li.cloneNode(true); ghost.className = "ghost"; ghost.style.width = li.offsetWidth + "px";
+    document.body.appendChild(ghost); li.classList.add("dragging");
+    function move(ev) {
+      ghost.style.left = (ev.clientX - 16) + "px"; ghost.style.top = (ev.clientY - 14) + "px";
+      var t = document.elementFromPoint(ev.clientX, ev.clientY), s = t && t.closest ? t.closest(".lane") : null;
+      if (s !== over) { if (over) over.classList.remove("over"); over = s; if (over) over.classList.add("over"); }
+    }
+    function up() {
+      document.removeEventListener("pointermove", move);
+      document.removeEventListener("pointerup", up);
+      document.removeEventListener("pointercancel", up);
+      ghost.remove(); li.classList.remove("dragging");
+      if (over) { over.classList.remove("over"); place(li, keyOf(over)); }
+      refresh(true);
+    }
+    move(e);
+    document.addEventListener("pointermove", move);
+    document.addEventListener("pointerup", up);
+    document.addEventListener("pointercancel", up);
+  });
+})();
+</script>
 </body>
 </html>
