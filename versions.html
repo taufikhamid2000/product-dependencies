@@ -195,7 +195,7 @@ a.op:focus-visible { outline: 2px solid var(--muted); outline-offset: 2px; borde
 
   <div class="notes">
     <p><strong>Where this comes from.</strong> The running version is not stored in git. The 1.1 and old-auth placements come from the team chat and the dev footer. Staging is on 1.2 per its health endpoint (1.2.1). Dates come from the team deployment plan. The six unconfirmed operators come from the pipeline repos only.</p>
-    <p><strong>Moving operators.</strong> Drag the grip beside a name to another lane, or focus it and press the left or right arrow key. Click the grey line under a name to add or edit a note. Layout and notes are saved in this browser only.</p>
+    <p><strong>Moving operators.</strong> Drag the grip beside a name to another lane, or focus it and press the left or right arrow key. Clicking an operator name opens its UserPortal and its <code>/auth/api/_health</code> page in two tabs (allow pop-ups if the second one is blocked). Click the grey line under a name to add or edit a note. Layout and notes are saved in this browser only.</p>
     <p><strong>Check next.</strong> Open each unconfirmed operator's UserPortal footer, or ask the team, then move it to the right lane.</p>
   </div>
 </main>
@@ -250,6 +250,14 @@ a.op:focus-visible { outline: 2px solid var(--muted); outline-offset: 2px; borde
     });
     n.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); n.blur(); } });
     li.appendChild(n);
+  });
+
+  // Clicking an operator name opens its UserPortal (the link itself) and its API health page in a second tab.
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest && e.target.closest("a.op");
+    if (!a || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || e.button) return;
+    var h = a.getAttribute("href").replace(/\/auth\/?$/, "/auth/api/_health");
+    if (h !== a.getAttribute("href")) window.open(h, "_blank", "noopener");
   });
 
   function save() {
