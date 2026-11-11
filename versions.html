@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Operator Auth Versions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Layout: a four-lane board, one lane per auth state, operators as rows inside each lane. */
+:root {
+  --bg: #f3f5f8;
+  --surface: #ffffff;
+  --fg: #15202e;
+  --muted: #5a6778;
+  --line: #dde2ea;
+  --old: #a4511b;      --old-soft: #fbece1;
+  --v11: #1d5fd1;      --v11-soft: #e4edfc;
+  --v12: #0e7a55;      --v12-soft: #dff3ea;
+  --unk: #6b5a14;      --unk-soft: #f6efcf;
+  --font-head: "Space Grotesk", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f151e; --surface: #18212d; --fg: #e8edf4; --muted: #9aa8ba; --line: #2a3646;
+    --old: #f0a36e; --old-soft: #3a2517;
+    --v11: #8db4ff; --v11-soft: #1c2d4d;
+    --v12: #5fd3a6; --v12-soft: #14362b;
+    --unk: #e6cf6a; --unk-soft: #38310f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f151e; --surface: #18212d; --fg: #e8edf4; --muted: #9aa8ba; --line: #2a3646;
+  --old: #f0a36e; --old-soft: #3a2517;
+  --v11: #8db4ff; --v11-soft: #1c2d4d;
+  --v12: #5fd3a6; --v12-soft: #14362b;
+  --unk: #e6cf6a; --unk-soft: #38310f;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--fg);
+  font: 15px/1.5 var(--font-body);
+  padding-block: 28px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+main { max-width: 1180px; margin: 0 auto; }
+h1 { font: 700 1.6rem/1.15 var(--font-head); margin: 0 0 4px; letter-spacing: -0.01em; text-wrap: balance; }
+.lede { margin: 0 0 20px; color: var(--muted); max-width: 70ch; }
+
+.tally { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 18px; }
+.pill { font: 600 0.8rem/1 var(--font-body); padding: 7px 12px; border-radius: 999px; font-variant-numeric: tabular-nums; }
+.pill.old { background: var(--old-soft); color: var(--old); }
+.pill.v11 { background: var(--v11-soft); color: var(--v11); }
+.pill.v12 { background: var(--v12-soft); color: var(--v12); }
+.pill.unk { background: var(--unk-soft); color: var(--unk); }
+
+.board { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; align-items: start; }
+.lane { min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.lane-head { padding: 12px 14px; display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.lane.old .lane-head { background: var(--old-soft); color: var(--old); }
+.lane.v11 .lane-head { background: var(--v11-soft); color: var(--v11); }
+.lane.v12 .lane-head { background: var(--v12-soft); color: var(--v12); }
+.lane.unk .lane-head { background: var(--unk-soft); color: var(--unk); }
+.lane-head h2 { margin: 0; font: 700 1rem/1.2 var(--font-head); }
+.lane-head .n { font: 700 1.2rem/1 var(--font-head); font-variant-numeric: tabular-nums; }
+.lane-sub { margin: 0; padding: 8px 14px 0; font-size: 0.8rem; color: var(--muted); }
+
+ul { list-style: none; margin: 0; padding: 6px 14px 10px; }
+li { padding: 9px 0; border-top: 1px solid var(--line); }
+li:first-child { border-top: 0; }
+.op { font-weight: 600; }
+.why { display: block; color: var(--muted); font-size: 0.8rem; margin-top: 1px; }
+.tag { display: inline-block; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; padding: 1px 6px; border-radius: 5px; background: var(--bg); color: var(--muted); margin-left: 6px; vertical-align: 1px; }
+.empty { padding: 14px; color: var(--muted); font-size: 0.85rem; }
+
+.notes { margin-top: 20px; padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; font-size: 0.85rem; color: var(--muted); }
+.notes strong { color: var(--fg); font-weight: 600; }
+.notes p { margin: 0 0 6px; max-width: 80ch; }
+.notes p:last-child { margin: 0; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Operator auth versions</h1>
+  <p class="lede">Where each operator stands before the 1.2 release: old GeoRepository auth, UserPortal 1.1, or UserPortal 1.2.</p>
+
+  <div class="tally" aria-label="Totals">
+    <span class="pill old">1 on old auth</span>
+    <span class="pill v11">7 on 1.1</span>
+    <span class="pill v12">0 on 1.2</span>
+    <span class="pill unk">5 not confirmed</span>
+  </div>
+
+  <div class="board">
+    <section class="lane old">
+      <div class="lane-head"><h2>Old auth</h2><span class="n">1</span></div>
+      <p class="lane-sub">GeoRepository IdentityServer, no UserPortal yet</p>
+      <ul>
+        <li><span class="op">Operator A</span><span class="tag">next Wed</span>
+          <span class="why">Auth DB migrated to UserPortal. Goes straight to 1.2.</span></li>
+      </ul>
+    </section>
+
+    <section class="lane v11">
+      <div class="lane-head"><h2>UserPortal 1.1</h2><span class="n">7</span></div>
+      <p class="lane-sub">Need 1.1 to 1.2 patching before release</p>
+      <ul>
+        <li><span class="op">Staging</span><span class="why">On the 1.1 list</span></li>
+        <li><span class="op">Operator B</span><span class="why">On the 1.1 list</span></li>
+        <li><span class="op">Operator C</span><span class="why">On the 1.1 list</span></li>
+        <li><span class="op">Operator D</span><span class="why">On the 1.1 list</span></li>
+        <li><span class="op">Operator E</span><span class="why">On the 1.1 list</span></li>
+        <li><span class="op">Operator F</span><span class="why">On the 1.1 list</span></li>
+        <li><span class="op">Dev</span><span class="why">Footer shows v1.1.108</span></li>
+      </ul>
+    </section>
+
+    <section class="lane v12">
+      <div class="lane-head"><h2>UserPortal 1.2</h2><span class="n">0</span></div>
+      <p class="lane-sub">develop branch, not released yet</p>
+      <div class="empty">No operator yet. After the release, everyone moves here and 1.1 is retired.</div>
+    </section>
+
+    <section class="lane unk">
+      <div class="lane-head"><h2>Not confirmed</h2><span class="n">5</span></div>
+      <p class="lane-sub">Not on the 1.1 list; live version unknown</p>
+      <ul>
+        <li><span class="op">Operator G</span><span class="why">Has a UserPortal overlay and a release stage</span></li>
+        <li><span class="op">Operator H</span><span class="why">Has a UserPortal overlay and a release stage</span></li>
+        <li><span class="op">Operator I</span><span class="why">Has a UserPortal overlay and a release stage</span></li>
+        <li><span class="op">Operator J</span><span class="why">Has a UserPortal overlay and a release stage</span></li>
+        <li><span class="op">Operator K</span><span class="why">Has a UserPortal overlay and a release stage</span></li>
+      </ul>
+    </section>
+  </div>
+
+  <div class="notes">
+    <p><strong>Where this comes from.</strong> The running version is not stored in git. The 1.1 and old-auth placements come from the team chat and the dev footer. The five unconfirmed operators come from the pipeline repos only.</p>
+    <p><strong>Check next.</strong> Open each unconfirmed operator's UserPortal footer, or ask the team, then move it to the right lane.</p>
+  </div>
+</main>
+</body>
+</html>
