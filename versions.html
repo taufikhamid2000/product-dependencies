@@ -6,6 +6,7 @@
 <title>Operator Auth Versions</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap">
+<script>try{var t=localStorage.getItem("pd-theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 <style>
 /* Layout: a four-lane board, one lane per auth state, operators as rows inside each lane. */
 :root {
@@ -95,12 +96,16 @@ li.dragging { opacity: 0.35; }
 .reset:hover { color: var(--fg); border-color: var(--muted); }
 .reset:focus-visible { outline: 2px solid var(--muted); outline-offset: 2px; }
 .tally { align-items: center; }
+.top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.theme { font: 600 0.8rem/1 var(--font-body); padding: 8px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); cursor: pointer; white-space: nowrap; }
+.theme:hover { color: var(--fg); border-color: var(--muted); }
+.theme:focus-visible { outline: 2px solid var(--muted); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
 <body>
 <main>
-  <h1>Operator auth versions</h1>
+  <div class="top"><h1>Operator auth versions</h1><button type="button" class="theme" id="theme">Dark mode</button></div>
   <p class="lede">Where each operator stands before the 1.2 release: old GeoRepository auth, UserPortal 1.1, or UserPortal 1.2.</p>
 
   <div class="tally" aria-label="Totals">
@@ -163,6 +168,19 @@ li.dragging { opacity: 0.35; }
 </main>
 <script>
 (function () {
+  var root = document.documentElement, themeBtn = document.getElementById("theme");
+  function isDark() {
+    var t = root.getAttribute("data-theme");
+    return t ? t === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+  }
+  function themeLabel() { themeBtn.textContent = isDark() ? "Light mode" : "Dark mode"; }
+  themeBtn.addEventListener("click", function () {
+    var next = isDark() ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("pd-theme", next); } catch (e) {}
+    themeLabel();
+  });
+  themeLabel();
   var KEY = "pd-versions-lanes";
   var ORDER = ["old", "v11", "v12", "unk"];
   var LABEL = { old: " on old auth", v11: " on 1.1", v12: " on 1.2", unk: " not confirmed" };
