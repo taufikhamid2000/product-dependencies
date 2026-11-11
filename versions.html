@@ -74,7 +74,9 @@ ul { list-style: none; margin: 0; padding: 6px 14px 10px; }
 li { padding: 9px 0; border-top: 1px solid var(--line); }
 li:first-child { border-top: 0; }
 .op { font-weight: 600; }
-.why { display: block; color: var(--muted); font-size: 0.8rem; margin-top: 1px; }
+.note { display: block; color: var(--muted); font-size: 0.8rem; margin-top: 1px; min-height: 1.2em; outline: 0; border-radius: 4px; cursor: text; overflow-wrap: anywhere; }
+.note:empty::before { content: attr(data-ph); opacity: 0.45; }
+.note:hover, .note:focus { background: var(--bg); box-shadow: 0 0 0 3px var(--bg); }
 .tag { display: inline-block; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; padding: 1px 6px; border-radius: 5px; background: var(--bg); color: var(--muted); margin-left: 6px; vertical-align: 1px; }
 .empty { padding: 14px; color: var(--muted); font-size: 0.85rem; }
 
@@ -133,8 +135,7 @@ a.op:focus-visible { outline: 2px solid var(--muted); outline-offset: 2px; borde
       <div class="lane-head"><h2>Old auth</h2><span class="n">1</span></div>
       <p class="lane-sub">GeoRepository IdentityServer, no UserPortal yet</p>
       <ul>
-        <li><a class="op" href="https://epsg.org/auth" target="_blank" rel="noopener">EPSG</a><span class="tag date">12/11</span>
-          <span class="why">Old GeoRepository auth DB, migrated to UserPortal. Deploys on 1.2.</span></li>
+        <li><a class="op" href="https://epsg.org/auth" target="_blank" rel="noopener">EPSG</a><span class="tag date">12/11</span></li>
       </ul>
     </section>
 
@@ -142,20 +143,21 @@ a.op:focus-visible { outline: 2px solid var(--muted); outline-offset: 2px; borde
       <div class="lane-head"><h2>UserPortal 1.1</h2><span class="n">7</span></div>
       <p class="lane-sub">Need 1.1 to 1.2 patching before release</p>
       <ul>
-        <li><a class="op" href="https://staging.georepository.com/auth" target="_blank" rel="noopener">Staging</a><span class="tag">stg-operator</span><span class="why">On the 1.1 list</span></li>
-        <li><a class="op" href="https://auth.geosuite.online/auth" target="_blank" rel="noopener">GeoEssentials</a><span class="tag date">11/11</span><span class="why">On the 1.1 list</span></li>
-        <li><a class="op" href="https://geosuite.georepository.com/auth" target="_blank" rel="noopener">GeoSuite</a><span class="tag date">11/11</span><span class="why">On the 1.1 list</span></li>
-        <li><a class="op" href="https://iogp.georepository.com/auth" target="_blank" rel="noopener">IOGP</a><span class="tag date">11/11</span><span class="why">On the 1.1 list</span></li>
-        <li><a class="op" href="https://pgpr.georepository.com/auth" target="_blank" rel="noopener">Petronas</a><span class="tag date">11/11</span><span class="why">On the 1.1 list</span></li>
-        <li><a class="op" href="https://adura.georepository.com/auth" target="_blank" rel="noopener">Adura</a><span class="tag date">11/11</span><span class="why">On the 1.1 list</span></li>
-        <li><a class="op" href="https://dev.georepository.com/auth" target="_blank" rel="noopener">Dev</a><span class="tag">dev-operator</span><span class="why">Footer shows v1.1.108</span></li>
+        <li><a class="op" href="https://auth.geosuite.online/auth" target="_blank" rel="noopener">GeoEssentials</a><span class="tag date">11/11</span></li>
+        <li><a class="op" href="https://geosuite.georepository.com/auth" target="_blank" rel="noopener">GeoSuite</a><span class="tag date">11/11</span></li>
+        <li><a class="op" href="https://iogp.georepository.com/auth" target="_blank" rel="noopener">IOGP</a><span class="tag date">11/11</span></li>
+        <li><a class="op" href="https://pgpr.georepository.com/auth" target="_blank" rel="noopener">Petronas</a><span class="tag date">11/11</span></li>
+        <li><a class="op" href="https://adura.georepository.com/auth" target="_blank" rel="noopener">Adura</a><span class="tag date">11/11</span></li>
+        <li><a class="op" href="https://dev.georepository.com/auth" target="_blank" rel="noopener">Dev</a><span class="tag">dev-operator</span></li>
       </ul>
     </section>
 
     <section class="lane v12">
       <div class="lane-head"><h2>UserPortal 1.2</h2><span class="n">0</span></div>
-      <p class="lane-sub">develop branch, not released yet</p>
-      <ul></ul>
+      <p class="lane-sub">release/1.2 branch</p>
+      <ul>
+        <li><a class="op" href="https://staging.georepository.com/auth" target="_blank" rel="noopener">Staging</a><span class="tag">stg-operator</span></li>
+      </ul>
       <div class="empty">No operator yet. After the release, everyone moves here and 1.1 is retired.</div>
     </section>
 
@@ -163,12 +165,12 @@ a.op:focus-visible { outline: 2px solid var(--muted); outline-offset: 2px; borde
       <div class="lane-head"><h2>Not confirmed</h2><span class="n">6</span></div>
       <p class="lane-sub">Not on the 1.1 list; live version unknown</p>
       <ul>
-        <li><a class="op" href="https://equinor.georepository.com/auth" target="_blank" rel="noopener">Equinor</a><span class="tag date">13/11</span><span class="why">Has a UserPortal overlay and a release stage</span></li>
-        <li><a class="op" href="https://em.georepository.com/auth" target="_blank" rel="noopener">Exxon</a><span class="tag date">16/11</span><span class="why">Has a UserPortal overlay and a release stage</span></li>
-        <li><a class="op" href="https://bp.georepository.com/auth" target="_blank" rel="noopener">BP</a><span class="tag date">17/11</span><span class="why">Has a UserPortal overlay and a release stage</span></li>
-        <li><a class="op" href="https://cop.georepository.com/auth" target="_blank" rel="noopener">COP</a><span class="tag date">19/11</span><span class="why">Has a UserPortal overlay and a release stage</span></li>
-        <li><span class="op">Shell</span><span class="tag date">20/11</span><span class="why">No overlay in the pipeline repos yet, so no link</span></li>
-        <li><a class="op" href="https://totalenergies.georepository.com/auth" target="_blank" rel="noopener">TotalEnergies</a><span class="tag date">18/11</span><span class="why">Has a UserPortal overlay and a release stage</span></li>
+        <li><a class="op" href="https://equinor.georepository.com/auth" target="_blank" rel="noopener">Equinor</a><span class="tag date">13/11</span></li>
+        <li><a class="op" href="https://em.georepository.com/auth" target="_blank" rel="noopener">Exxon</a><span class="tag date">16/11</span></li>
+        <li><a class="op" href="https://bp.georepository.com/auth" target="_blank" rel="noopener">BP</a><span class="tag date">17/11</span></li>
+        <li><a class="op" href="https://cop.georepository.com/auth" target="_blank" rel="noopener">COP</a><span class="tag date">19/11</span></li>
+        <li><span class="op">Shell</span><span class="tag date">20/11</span></li>
+        <li><a class="op" href="https://totalenergies.georepository.com/auth" target="_blank" rel="noopener">TotalEnergies</a><span class="tag date">18/11</span></li>
       </ul>
     </section>
   </div>
@@ -192,8 +194,8 @@ a.op:focus-visible { outline: 2px solid var(--muted); outline-offset: 2px; borde
   </div>
 
   <div class="notes">
-    <p><strong>Where this comes from.</strong> The running version is not stored in git. The 1.1 and old-auth placements come from the team chat and the dev footer. Dates come from the team deployment plan. The six unconfirmed operators come from the pipeline repos only.</p>
-    <p><strong>Moving operators.</strong> Drag the grip beside a name to another lane, or focus it and press the left or right arrow key. Your layout is saved in this browser only.</p>
+    <p><strong>Where this comes from.</strong> The running version is not stored in git. The 1.1 and old-auth placements come from the team chat and the dev footer. Staging is on 1.2 per its health endpoint (1.2.1). Dates come from the team deployment plan. The six unconfirmed operators come from the pipeline repos only.</p>
+    <p><strong>Moving operators.</strong> Drag the grip beside a name to another lane, or focus it and press the left or right arrow key. Click the grey line under a name to add or edit a note. Layout and notes are saved in this browser only.</p>
     <p><strong>Check next.</strong> Open each unconfirmed operator's UserPortal footer, or ask the team, then move it to the right lane.</p>
   </div>
 </main>
@@ -218,6 +220,9 @@ a.op:focus-visible { outline: 2px solid var(--muted); outline-offset: 2px; borde
   var lanes = {};
   ORDER.forEach(function (k) { lanes[k] = document.querySelector(".lane." + k); });
   var home = {};
+  var NKEY = "pd-versions-notes", notes = {};
+  var SEED = { Staging: "Health endpoint shows 1.2.1", Dev: "Footer showed v1.1.108", Shell: "No overlay in the pipeline repos yet, so no link" };
+  try { notes = JSON.parse(localStorage.getItem(NKEY) || "{}") || {}; } catch (e) {}
 
   function keyOf(section) { return ORDER.filter(function (k) { return section.classList.contains(k); })[0]; }
   function laneOf(li) { return keyOf(li.closest(".lane")); }
@@ -233,6 +238,18 @@ a.op:focus-visible { outline: 2px solid var(--muted); outline-offset: 2px; borde
     g.setAttribute("aria-label", "Move " + id + ". Press left or right arrow to change lane.");
     g.title = "Drag to another lane";
     li.insertBefore(g, li.firstChild);
+    var n = document.createElement("span");
+    n.className = "note"; n.dataset.ph = "Add note";
+    try { n.contentEditable = "plaintext-only"; } catch (e) {}
+    if (n.contentEditable !== "plaintext-only") n.contentEditable = "true";
+    n.setAttribute("role", "textbox"); n.setAttribute("aria-label", "Note for " + id);
+    n.textContent = Object.prototype.hasOwnProperty.call(notes, id) ? notes[id] : (SEED[id] || "");
+    n.addEventListener("input", function () {
+      notes[id] = n.textContent.replace(/\s+/g, " ").trim();
+      try { localStorage.setItem(NKEY, JSON.stringify(notes)); } catch (e) {}
+    });
+    n.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); n.blur(); } });
+    li.appendChild(n);
   });
 
   function save() {
